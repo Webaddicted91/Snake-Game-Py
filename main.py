@@ -146,7 +146,50 @@ def draw_snake():
         (mouth_x, mouth_y)
     ])
 
-# Main Function
+# Adding a fire mechanism
+fire_position = [-1, -1]  # Initial fire position (offscreen)
+fire_direction = ''  # Track the direction of the fire
+fire_active = False  # To track if fire is active
+fire_speed = 20  # Speed of the fire
+fire_timer = 0  # Timer to track fire duration
+
+# Function to shoot fire from snake mouth
+def shoot_fire():
+    global fire_position, fire_active, fire_timer, fire_direction
+
+    fire_active = True  # Activate the fire
+    fire_timer = pygame.time.get_ticks()  # Record the time when fire was shot
+    fire_position = list(snake_position)  # Fire starts from the snake's head
+    fire_direction = direction  # Fire moves in the current direction
+
+# Function to move and draw the fire
+def move_and_draw_fire():
+    global fire_active, fire_position, fire_direction
+    
+    # If fire is active, move it in the current direction
+    if fire_active:
+        # Deactivate fire after 2 seconds
+        if pygame.time.get_ticks() - fire_timer > 2000:
+            fire_active = False
+        else:
+            # Move fire in the same direction as when it was shot
+            if fire_direction == 'UP':
+                fire_position[1] -= fire_speed
+            elif fire_direction == 'DOWN':
+                fire_position[1] += fire_speed
+            elif fire_direction == 'LEFT':
+                fire_position[0] -= fire_speed
+            elif fire_direction == 'RIGHT':
+                fire_position[0] += fire_speed
+
+            # Draw the fire as a small red square
+            pygame.draw.rect(game_window, red, pygame.Rect(fire_position[0], fire_position[1], 10, 10))
+        
+            # Deactivate fire if it goes off the screen
+            if fire_position[0] < 0 or fire_position[0] > window_x or fire_position[1] < 0 or fire_position[1] > window_y:
+                fire_active = False
+
+# Main Function (modified)
 while True:
     # Handle timer
     seconds = (pygame.time.get_ticks() - start_ticks) / 1000  # calculate how many seconds
@@ -210,6 +253,7 @@ while True:
         score += 50  # Bonus fruit gives more points
         pygame.mixer.Sound.play(bonus_sound)
         bonus_fruit_spawn = False
+        shoot_fire()  # Shoot fire when bonus fruit is eaten
 
     # Spawning new fruit
     if not fruit_spawn:
@@ -227,6 +271,9 @@ while True:
     pygame.draw.rect(game_window, white, pygame.Rect(fruit_position[0], fruit_position[1], 10, 10))
     if bonus_fruit_spawn:
         pygame.draw.rect(game_window, purple, pygame.Rect(bonus_fruit_position[0], bonus_fruit_position[1], 10, 10))
+
+    # Move and draw the fire
+    move_and_draw_fire()
 
     # Teleportation mechanism
     if snake_position == teleport_1:
